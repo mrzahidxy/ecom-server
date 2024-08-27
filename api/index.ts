@@ -1,6 +1,6 @@
 import express, { Express} from "express";
-import { PORT } from "./secret";
-import rootRouter from "./routes";
+import { PORT } from "../src/secret";
+import rootRouter from "../src/routes";
 
 const app: Express = express();
 app.use(express.json());

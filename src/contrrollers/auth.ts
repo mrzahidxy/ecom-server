@@ -4,9 +4,9 @@ import jwt from "jsonwebtoken";
 import prisma from "../connect";
 import { BadRequestException } from "../exceptions/bad-request";
 import { ErrorCode } from "../exceptions/root";
-import { UnprocessableEntityException } from "../exceptions/validation";
 import { SignUpSchema } from "../schema/users";
 import { NotFoundException } from "../exceptions/not-found";
+import { JWT_SECRET } from "../secret";
 
 export const signup = async (
   req: Request,
@@ -63,7 +63,11 @@ export const login = async (
     );
   }
 
-  const token = jwt.sign({ id: user.id }, "secret", { expiresIn: "1d" });
+  const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: "1d" });
 
   res.json({ user, token });
+};
+
+export const me = async (req: Request, res: Response, next: NextFunction) => {
+  res.json(req.user);
 };

@@ -79,7 +79,7 @@ export const deleteAddress = async (req: Request, res: Response) => {
         const address = await findAddress(addressId, userId!);
 
         if (!address) {
-            throw new UnauthorizedException("Unauthorized", ErrorCode.NO_AUTRHORIZED);
+            throw new UnauthorizedException("Unauthorized", ErrorCode.NO_AUTHORIZED);
         }
 
         // Delete the address

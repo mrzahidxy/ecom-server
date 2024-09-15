@@ -29,6 +29,8 @@ export enum ErrorCode {
   PRODUCT_NOT_FOUND = 2001,
   
   CART_NOT_FOUND = 2002,       // Fixed leading zero in 001
+
+  ORDER_NOT_FOUND = 2003,
   
   INTERNAL_EXCEPTION = 3001,
   

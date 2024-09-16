@@ -3,6 +3,8 @@ import prisma from "../connect";
 import { NotFoundException } from "../exceptions/not-found";
 import { ErrorCode } from "../exceptions/root";
 import { Order } from "@prisma/client";
+import { HTTPSuccessResponse } from "../helpers/success-response";
+
 
 export const createOrder = async (req: Request, res: Response) => {
   return await prisma.$transaction(async (tx) => {
@@ -125,7 +127,7 @@ export const getUserOrder = async (req: Request, res: Response) => {
     },
   });
 
-  res.json(createApiResponse(true, "Request successful", orders));
+  new HTTPSuccessResponse("Orders fetched successfully", 200, orders);
 };
 
 export const updateOrderStatus = async (req: Request, res: Response) => {
@@ -154,7 +156,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
       });
     });
 
-    res.json(createApiResponse(true, "Request successful", order));
+    new HTTPSuccessResponse("Order status updated successfully", 200, order);
   } catch (error) {
     throw new NotFoundException("Order not found", ErrorCode.ORDER_NOT_FOUND);
   }

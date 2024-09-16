@@ -55,6 +55,7 @@ model Product {
   description  String
   price        Decimal
   tags         String
+  image        String?
   createdAt    DateTime       @default(now())
   updateAt     DateTime       @updatedAt
   CartItem     CartItem[]

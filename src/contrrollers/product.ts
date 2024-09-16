@@ -2,26 +2,55 @@ import { Request, Response } from "express";
 import prisma from "../connect";
 import { NotFoundException } from "../exceptions/not-found";
 import { ErrorCode } from "../exceptions/root";
+import { HTTPSuccessResponse } from "../helpers/success-response";
 
 export const createProduct = async (req: Request, res: Response) => {
-  const product = await prisma.product.create({
-    data: {
-      ...req.body,
-      tags: req?.body?.tags?.join(","),
-    },
-  });
+  try {
+    // Check if an image file was uploaded
+    const imageUrl = req.file ? req.file.path : null;
 
-  res.json(product);
+    // Construct the product data
+    const productData = {
+      ...req.body,
+      tags: Array.isArray(req.body.tags) ? req.body.tags.join(",") : "",
+      image: imageUrl,
+    };
+
+    const product = await prisma.product.create({
+      data: productData,
+    });
+
+    const response = new HTTPSuccessResponse(
+      "Product created successfully",
+      201,
+      product
+    );
+    res.status(response.statusCode).json(response);
+  } catch (error) {
+    throw new NotFoundException(
+      "INTERNAL EXCEPTION",
+      ErrorCode?.INTERNAL_EXCEPTION
+    );
+  }
 };
 
 export const updateProduct = async (req: Request, res: Response) => {
   try {
+    // Check if an image file was uploaded
+    const imageUrl = req.file ? req.file.path : null;
+
+    console.log(imageUrl)
+
+    // Construct the product data
+    const productData = {
+      ...req.body,
+      tags: Array.isArray(req.body.tags) ? req.body.tags.join(",") : "",
+      image: imageUrl,
+    };
+
     const updateProduct = await prisma.product.update({
       where: { id: Number(req.params.id) },
-      data: {
-        ...req.body,
-        tags: req?.body?.tags?.join(","),
-      },
+      data: productData,
     });
 
     res.json(updateProduct);

@@ -7,6 +7,7 @@ import { ErrorCode } from "../exceptions/root";
 import { SignUpSchema } from "../schema/users";
 import { NotFoundException } from "../exceptions/not-found";
 import { JWT_SECRET } from "../secret";
+import { HTTPSuccessResponse } from "../helpers/success-response";
 
 export const signup = async (
   req: Request,
@@ -37,7 +38,10 @@ export const signup = async (
     },
   });
 
-  res.json(user);
+  const { password: userPassword, ...rest } = user;
+
+  const response = new HTTPSuccessResponse("Signup successfully", 201, rest);
+  res.status(response.statusCode).json(response);
 };
 
 export const login = async (
@@ -65,9 +69,26 @@ export const login = async (
 
   const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: "1d" });
 
-  res.json({ user, token });
+  const { password: userPassword, ...rest } = user;
+
+  const response = new HTTPSuccessResponse("Login successfully", 201, {
+    ...rest,
+    token,
+  });
+  res.status(response.statusCode).json(response);
 };
 
 export const me = async (req: Request, res: Response, next: NextFunction) => {
-  res.json(req.user);
+  const user = await prisma.user.findUnique({
+    where: { id: req.user?.id },
+  });
+
+  const { password, ...rest } = user?.password ? user : { password: null, ...user };
+
+  const response = new HTTPSuccessResponse(
+    "User fetched successfully",
+    200,
+    rest
+  );
+  res.status(response.statusCode).json(response);
 };

@@ -5,7 +5,6 @@ import { ErrorCode } from "../exceptions/root";
 import { Order } from "@prisma/client";
 import { HTTPSuccessResponse } from "../helpers/success-response";
 
-
 export const createOrder = async (req: Request, res: Response) => {
   return await prisma.$transaction(async (tx) => {
     const cartItems = await tx.cartItem.findMany({
@@ -23,13 +22,6 @@ export const createOrder = async (req: Request, res: Response) => {
 
     const address = await tx.address.findFirst({
       where: { id: req.user?.defaultShippingAddress! },
-    });
-
-    const cartProducts = cartItems.map((item) => {
-      return {
-        productId: item.productId,
-        quantity: item.quantity,
-      };
     });
 
     const order = await tx.order.create({
@@ -58,10 +50,17 @@ export const createOrder = async (req: Request, res: Response) => {
       where: { userId: req.user?.id },
     });
 
-    res.json({
-      order,
-      orderEvent,
-    });
+
+    const response = new HTTPSuccessResponse(
+      "Order created successfully",
+      201,
+      {
+        order,
+        orderEvent,
+      }
+    );
+    res.status(response.statusCode).json(response);
+
   });
 };
 
@@ -91,7 +90,11 @@ export const cancelOrder = async (req: Request, res: Response) => {
       });
     });
 
-    res.json("Order cancelled");
+    const response = new HTTPSuccessResponse(
+      "Order cancelled successfully",
+      200
+    );
+    res.status(response.statusCode).json(response);
   } catch (error) {
     throw new NotFoundException("Order not found", ErrorCode.ORDER_NOT_FOUND);
   }
@@ -105,7 +108,12 @@ export const getOrders = async (req: Request, res: Response) => {
     },
   });
 
-  res.json(orders);
+  const response = new HTTPSuccessResponse(
+    "Orders fetched successfully",
+    200,
+    orders
+  );
+  res.status(response.statusCode).json(response);
 };
 
 export const getOrderById = async (req: Request, res: Response) => {
@@ -116,32 +124,49 @@ export const getOrderById = async (req: Request, res: Response) => {
     },
   });
 
-  res.json(order);
+  const response = new HTTPSuccessResponse(
+    "Orders fetched successfully",
+    200,
+    order
+  );
+  res.status(response.statusCode).json(response);
 };
 
 export const getUserOrder = async (req: Request, res: Response) => {
-  const orders = await prisma.order.findMany({
-    where: { userId: req.user?.id },
-    include: {
-      products: true,
-    },
-  });
+  try {
+    const orders = await prisma.order.findMany({
+      where: { userId: req.user?.id },
+      include: {
+        products: true,
+      },
+    });
 
-  new HTTPSuccessResponse("Orders fetched successfully", 200, orders);
+    const response = new HTTPSuccessResponse(
+      "Orders fetched successfully",
+      200,
+      orders
+    );
+    res.status(response.statusCode).json(response);
+
+  } catch (error) {
+    throw new NotFoundException("Order not found", ErrorCode.ORDER_NOT_FOUND);
+  }
 };
 
 export const updateOrderStatus = async (req: Request, res: Response) => {
   let order: Order;
   try {
     order = await prisma.order.findFirstOrThrow({
-      where: { id: +req.params.id, userId: req.user?.id },
+      where: { id: +req.params.id },
       include: {
         products: true,
       },
     });
 
+
+
     await prisma.$transaction(async (tx) => {
-      await tx.order.update({
+      const updatedOrder = await tx.order.update({
         where: { id: order.id },
         data: {
           status: req.body.status,
@@ -154,9 +179,15 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
           status: req.body.status,
         },
       });
+      const response = new HTTPSuccessResponse(
+        "Order status updated successfully",
+        200,
+        updatedOrder
+      );
+      res.status(response.statusCode).json(response);
     });
 
-    new HTTPSuccessResponse("Order status updated successfully", 200, order);
+
   } catch (error) {
     throw new NotFoundException("Order not found", ErrorCode.ORDER_NOT_FOUND);
   }

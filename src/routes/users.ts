@@ -7,7 +7,7 @@ import { getUserById, getUsers, updateUserRole } from "../contrrollers/users";
 const userRoutes: Router = Router();
 
 userRoutes.put(
-  "/role",
+  "/role/:id",
   [authMiddleware, adminMiddleWare],
   errorHandler(updateUserRole)
 );

@@ -6,6 +6,7 @@ import {
   createOrder,
   getOrderById,
   getOrders,
+  getUserOrder,
   updateOrderStatus,
 } from "../contrrollers/order";
 import { adminMiddleWare } from "../middleware/admin";
@@ -16,6 +17,17 @@ orderRoutes.post("/", [authMiddleware], errorHandler(createOrder));
 orderRoutes.put("/:id", [authMiddleware], errorHandler(cancelOrder));
 orderRoutes.get("/:id", [authMiddleware], errorHandler(getOrderById));
 orderRoutes.get("/", [authMiddleware], errorHandler(getOrders));
-orderRoutes.put("/:id", [authMiddleware, adminMiddleWare], errorHandler(updateOrderStatus));
+
+// Admin Routes
+orderRoutes.get(
+  "/users/:id",
+  [authMiddleware, adminMiddleWare],
+  errorHandler(getUserOrder)
+);
+orderRoutes.put(
+  "/status/:id",
+  [authMiddleware, adminMiddleWare],
+  errorHandler(updateOrderStatus)
+);
 
 export default orderRoutes;

@@ -8,6 +8,6 @@ const cartRoutes: Router = Router();
 cartRoutes.post("/", [authMiddleware], errorHandler(addToCart));
 cartRoutes.delete("/:id", [authMiddleware], errorHandler(deleteCartItem));
 cartRoutes.put("/:id", [authMiddleware], errorHandler(changeQuantity));
-cartRoutes.get("/", getCart);
+cartRoutes.get("/", [authMiddleware], getCart);
 
 export default cartRoutes;

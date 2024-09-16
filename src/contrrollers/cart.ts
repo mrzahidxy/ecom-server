@@ -4,6 +4,7 @@ import { AddToCartSchema, changeQuantitySchema } from "../schema/cart";
 import { NotFoundException } from "../exceptions/not-found";
 import { ErrorCode } from "../exceptions/root";
 import { Request, Response } from "express";
+import { HTTPSuccessResponse } from "../helpers/success-response";
 
 export const addToCart = async (req: Request, res: Response) => {
   const validateData = AddToCartSchema.parse(req.body);
@@ -25,8 +26,6 @@ export const addToCart = async (req: Request, res: Response) => {
     where: { productId: validateData?.productId, userId: req.user?.id },
   });
 
-  console.log(existingCartItem);
-
   let cartItem;
 
   if (existingCartItem) {
@@ -46,7 +45,11 @@ export const addToCart = async (req: Request, res: Response) => {
     });
   }
 
-  res.json(cartItem);
+  const response = new HTTPSuccessResponse(
+    "Product added to cart successfully",
+    201
+  );
+  res.status(response.statusCode).json(response);
 };
 
 export const deleteCartItem = async (req: Request, res: Response) => {
@@ -55,13 +58,14 @@ export const deleteCartItem = async (req: Request, res: Response) => {
       where: { id: Number(req.params.id), userId: req.user?.id },
     });
   } catch (error) {
-    throw new NotFoundException(
-      "You cannot delete this item",
-      ErrorCode.NO_AUTHORIZED
-    );
+    throw new NotFoundException("Cart item not found", ErrorCode.NO_AUTHORIZED);
   }
 
-  res.json("deleted");
+  const response = new HTTPSuccessResponse(
+    "Cart item deleted successfully",
+    204
+  );
+  res.status(response.statusCode).json(response);
 };
 
 export const getCart = async (req: Request, res: Response) => {
@@ -69,7 +73,13 @@ export const getCart = async (req: Request, res: Response) => {
     where: { userId: req.user?.id },
     include: { product: true },
   });
-  res.json(cart);
+
+  const response = new HTTPSuccessResponse(
+    "Cart fetched successfully",
+    200,
+    cart
+  );
+  res.status(response.statusCode).json(response);
 };
 
 export const changeQuantity = async (req: Request, res: Response) => {
@@ -91,5 +101,10 @@ export const changeQuantity = async (req: Request, res: Response) => {
       quantity: validateData?.quantity,
     },
   });
-  res.json("updated");
+
+  const response = new HTTPSuccessResponse(
+    "Quantity updated successfully",
+    200
+  );
+  res.status(response.statusCode).json(response);
 };

@@ -12,7 +12,6 @@ export const createProduct = async (req: Request, res: Response) => {
     // Construct the product data
     const productData = {
       ...req.body,
-      tags: Array.isArray(req.body.tags) ? req.body.tags.join(",") : "",
       image: imageUrl,
     };
 
@@ -39,12 +38,9 @@ export const updateProduct = async (req: Request, res: Response) => {
     // Check if an image file was uploaded
     const imageUrl = req.file ? req.file.path : null;
 
-    console.log(imageUrl)
-
     // Construct the product data
     const productData = {
       ...req.body,
-      tags: Array.isArray(req.body.tags) ? req.body.tags.join(",") : "",
       image: imageUrl,
     };
 
@@ -53,7 +49,11 @@ export const updateProduct = async (req: Request, res: Response) => {
       data: productData,
     });
 
-    res.json(updateProduct);
+    const response = new HTTPSuccessResponse(
+      "Product updated successfully",
+      204
+    );
+    res.status(response.statusCode).json(response);
   } catch (error) {
     throw new NotFoundException(
       "Product not found",
@@ -67,7 +67,8 @@ export const deleteProduct = async (req: Request, res: Response) => {
     where: { id: Number(req.params.id) },
   });
 
-  res.json(product);
+  const response = new HTTPSuccessResponse("Product deleted successfully", 204);
+  res.status(response.statusCode).json(response);
 };
 
 export const getProducts = async (req: Request, res: Response) => {
@@ -83,13 +84,18 @@ export const getProducts = async (req: Request, res: Response) => {
     take,
   });
 
-  res.json({
-    currentPage: page,
-    totalPages,
-    perPage: take,
-    totalProducts: count,
-    data: products,
-  });
+  const response = new HTTPSuccessResponse(
+    "Products fetched successfully",
+    200,
+    {
+      currentPage: page,
+      totalPages,
+      perPage: take,
+      totalProducts: count,
+      data: products,
+    }
+  );
+  res.status(response.statusCode).json(response);
 };
 
 export const getProductById = async (req: Request, res: Response) => {
@@ -97,5 +103,10 @@ export const getProductById = async (req: Request, res: Response) => {
     where: { id: Number(req.params.id) },
   });
 
-  res.json(product);
+  const response = new HTTPSuccessResponse(
+    "Product fetched successfully",
+    200,
+    product
+  );
+  res.status(response.statusCode).json(response);
 };

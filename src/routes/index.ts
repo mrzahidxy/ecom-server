@@ -4,13 +4,15 @@ import productRoutes from "./product";
 import addressRoutes from "./address";
 import cartRoutes from "./cart";
 import orderRoutes from "./order";
+import userRoutes from "./users";
 
 const rootRouter: Router = Router();
 
 rootRouter.use("/auth", authRoutes);
 rootRouter.use('/products', productRoutes)
-rootRouter.use('/address', addressRoutes)
-rootRouter.use('/cart', cartRoutes)
-rootRouter.use('/order', orderRoutes)
+rootRouter.use('/addresses', addressRoutes)
+rootRouter.use('/carts', cartRoutes)
+rootRouter.use('/orders', orderRoutes)
+rootRouter.use('/users', userRoutes)
 
 export default rootRouter

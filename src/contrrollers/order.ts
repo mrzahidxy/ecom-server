@@ -63,17 +63,6 @@ export const createOrder = async (req: Request, res: Response) => {
   });
 };
 
-export const getOrders = async (req: Request, res: Response) => {
-  const orders = await prisma.order.findMany({
-    where: { userId: req.user?.id },
-    include: {
-      products: true,
-    },
-  });
-
-  res.json(orders);
-};
-
 export const cancelOrder = async (req: Request, res: Response) => {
   let order: Order;
   try {
@@ -92,7 +81,6 @@ export const cancelOrder = async (req: Request, res: Response) => {
         },
       });
 
-
       await tx.orderEvent.create({
         data: {
           orderId: order.id,
@@ -107,6 +95,17 @@ export const cancelOrder = async (req: Request, res: Response) => {
   }
 };
 
+export const getOrders = async (req: Request, res: Response) => {
+  const orders = await prisma.order.findMany({
+    where: { userId: req.user?.id },
+    include: {
+      products: true,
+    },
+  });
+
+  res.json(orders);
+};
+
 export const getOrderById = async (req: Request, res: Response) => {
   const order = await prisma.order.findFirstOrThrow({
     where: { id: +req.params.id, userId: req.user?.id },
@@ -116,4 +115,47 @@ export const getOrderById = async (req: Request, res: Response) => {
   });
 
   res.json(order);
+};
+
+export const getUserOrder = async (req: Request, res: Response) => {
+  const orders = await prisma.order.findMany({
+    where: { userId: req.user?.id },
+    include: {
+      products: true,
+    },
+  });
+
+  res.json(createApiResponse(true, "Request successful", orders));
+};
+
+export const updateOrderStatus = async (req: Request, res: Response) => {
+  let order: Order;
+  try {
+    order = await prisma.order.findFirstOrThrow({
+      where: { id: +req.params.id, userId: req.user?.id },
+      include: {
+        products: true,
+      },
+    });
+
+    await prisma.$transaction(async (tx) => {
+      await tx.order.update({
+        where: { id: order.id },
+        data: {
+          status: req.body.status,
+        },
+      });
+
+      await tx.orderEvent.create({
+        data: {
+          orderId: order.id,
+          status: req.body.status,
+        },
+      });
+    });
+
+    res.json(createApiResponse(true, "Request successful", order));
+  } catch (error) {
+    throw new NotFoundException("Order not found", ErrorCode.ORDER_NOT_FOUND);
+  }
 };

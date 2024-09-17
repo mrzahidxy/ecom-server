@@ -8,26 +8,124 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// datasource db {
-//   provider = "postgresql"
-//   url      = "postgresql://postgres.gdsmkisbmkfneaosiowg:#@User123456@#@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres"
-// }
-
-
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
+// to conncet supabase
+// datasource db {
+//   provider  = "postgresql"
+//   url       = env("DATABASE_URL")
+//   directUrl = env("DIRECT_URL")
+// }
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum OrderEventStatus {
+  PENDING
+  ACCEPTED
+  OUT_FOR_DELIVERY
+  CANCELLED
+}
 
 model User {
-  id Int @id @default(autoincrement())
-  name String
-  email String @unique
-  password String
-  createdAt DateTime @default(now())
-  updateAt DateTime @updatedAt
+  id                     Int        @id @default(autoincrement())
+  name                   String
+  email                  String     @unique
+  password               String
+  role                   Role       @default(USER)
+  createdAt              DateTime   @default(now())
+  updateAt               DateTime   @updatedAt
+  Address                Address[]
+  defaultShippingAddress Int?
+  defaultBillingAddress  Int?
+  CartItem               CartItem[]
+  Order                  Order[]
 
   @@map("users")
+}
+
+model Product {
+  id           Int            @id @default(autoincrement())
+  name         String
+  description  String
+  price        Decimal
+  tags         String
+  image        String?
+  createdAt    DateTime       @default(now())
+  updateAt     DateTime       @updatedAt
+  CartItem     CartItem[]
+  OrderProduct OrderProduct[]
+
+  @@map("products")
+}
+
+model Address {
+  id         Int      @id @default(autoincrement())
+  country    String
+  state      String
+  city       String
+  postalCode Int
+  address    String
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+  createdAt  DateTime @default(now())
+  updateAt   DateTime @updatedAt
+
+  @@map("addresses")
+}
+
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("cart_items")
+}
+
+model Order {
+  id        Int              @id @default(autoincrement())
+  userId    Int
+  user      User             @relation(fields: [userId], references: [id])
+  netAmount Decimal
+  address   String
+  status    OrderEventStatus @default(PENDING)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  products   OrderProduct[]
+  OrderEvent OrderEvent[]
+
+  @@map("orders")
+}
+
+model OrderProduct {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  order     Order    @relation(fields: [orderId], references: [id])
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("order_products")
+}
+
+model OrderEvent {
+  id        Int              @id @default(autoincrement())
+  orderId   Int
+  order     Order            @relation(fields: [orderId], references: [id])
+  status    OrderEventStatus @default(PENDING)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
 }

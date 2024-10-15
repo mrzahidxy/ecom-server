@@ -1,9 +1,20 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { compareSync, hashSync } from "bcrypt";
 import jwt from "jsonwebtoken";
 import prisma from "../connect";
+import { BadRequestException } from "../exceptions/bad-request";
+import { ErrorCode } from "../exceptions/root";
+import { SignUpSchema } from "../schema/users";
+import { NotFoundException } from "../exceptions/not-found";
+import { JWT_SECRET } from "../secret";
+import { HTTPSuccessResponse } from "../helpers/success-response";
 
-export const signup = async (req: Request, res: Response) => {
+export const signup = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  SignUpSchema.parse(req.body);
   const { name, email, password } = req.body;
 
   let user = await prisma.user.findFirst({
@@ -11,8 +22,12 @@ export const signup = async (req: Request, res: Response) => {
   });
 
   if (user) {
-    res.json("User already exists");
-    return;
+    next(
+      new BadRequestException(
+        "User already exists",
+        ErrorCode.USER_ALREADY_EXISTS
+      )
+    );
   }
 
   user = await prisma.user.create({
@@ -23,10 +38,17 @@ export const signup = async (req: Request, res: Response) => {
     },
   });
 
-  res.json(user);
+  const { password: userPassword, ...rest } = user;
+
+  const response = new HTTPSuccessResponse("Signup successfully", 201, rest);
+  res.status(response.statusCode).json(response);
 };
 
-export const login = async (req: Request, res: Response) => {
+export const login = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const { email, password } = req.body;
 
   let user = await prisma.user.findFirst({
@@ -34,16 +56,42 @@ export const login = async (req: Request, res: Response) => {
   });
 
   if (!user) {
-    res.json("No user found");
-    return;
+    return next(
+      new NotFoundException("No user found", ErrorCode.USER_NOT_FOUND)
+    );
   }
 
   if (!compareSync(password, user.password)) {
-    res.json("Wrong password");
-    return;
+    return next(
+      new BadRequestException("Wrong password", ErrorCode.INCORRECT_PASSWORD)
+    );
   }
 
-  const token = jwt.sign({ id: user.id }, "secret", { expiresIn: "1d" });
+  const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: "1d" });
 
-  res.json({ user, token });
+  const { password: userPassword, ...rest } = user;
+
+  const response = new HTTPSuccessResponse("Login successfully", 201, {
+    ...rest,
+    token,
+  });
+  res.status(response.statusCode).json(response);
+};
+
+export const me = async (req: Request, res: Response, next: NextFunction) => {
+  const user = await prisma.user.findUnique({
+    where: { id: req.user?.id },
+    include: { Address: true },
+  });
+
+  const { password, ...rest } = user?.password
+    ? user
+    : { password: null, ...user };
+
+  const response = new HTTPSuccessResponse(
+    "User fetched successfully",
+    200,
+    rest
+  );
+  res.status(response.statusCode).json(response);
 };

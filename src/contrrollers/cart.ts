@@ -47,7 +47,7 @@ export const addToCart = async (req: Request, res: Response) => {
 
   const response = new HTTPSuccessResponse(
     "Product added to cart successfully",
-    201
+    201, cartItem
   );
   res.status(response.statusCode).json(response);
 };

@@ -6,8 +6,8 @@ env:
 
 on:
   push:
-    branches:
-      - deployment_dev
+    branches-ignore:
+      - main
 
 jobs:
   deploy:

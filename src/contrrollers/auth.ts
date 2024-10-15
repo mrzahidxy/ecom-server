@@ -81,9 +81,12 @@ export const login = async (
 export const me = async (req: Request, res: Response, next: NextFunction) => {
   const user = await prisma.user.findUnique({
     where: { id: req.user?.id },
+    include: { Address: true },
   });
 
-  const { password, ...rest } = user?.password ? user : { password: null, ...user };
+  const { password, ...rest } = user?.password
+    ? user
+    : { password: null, ...user };
 
   const response = new HTTPSuccessResponse(
     "User fetched successfully",

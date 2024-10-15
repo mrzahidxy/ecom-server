@@ -6,15 +6,31 @@ import { updateUserRoleSchema } from "../schema/users";
 import { HTTPSuccessResponse } from "../helpers/success-response";
 
 export const getUsers = async (req: Request, res: Response) => {
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+
+  const skip = (page - 1) * limit;
+
   const users = await prisma.user.findMany({
-    skip: (req?.query?.skip && +req?.query.skip) || 0,
+    skip,
+    take: limit,
   });
 
-  const response = new HTTPSuccessResponse(
-    "Users fetched successfully",
-    200,
-    users
-  );
+  // Get total number of orders
+  const totalOrders = await prisma.order.count();
+
+  // Prepare pagination metadata
+  const totalPages = Math.ceil(totalOrders / limit);
+
+  const response = new HTTPSuccessResponse("Users fetched successfully", 200, {
+    collection: users,
+    pagination: {
+      currentPage: page,
+      totalPages,
+      totalOrders,
+      limit,
+    },
+  });
   res.status(response.statusCode).json(response);
 };
 

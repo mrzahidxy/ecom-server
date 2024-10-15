@@ -16,9 +16,14 @@ const orderRoutes: Router = Router();
 orderRoutes.post("/", [authMiddleware], errorHandler(createOrder));
 orderRoutes.put("/:id", [authMiddleware], errorHandler(cancelOrder));
 orderRoutes.get("/:id", [authMiddleware], errorHandler(getOrderById));
-orderRoutes.get("/", [authMiddleware], errorHandler(getOrders));
 
 // Admin Routes
+orderRoutes.get(
+  "/",
+  [authMiddleware, adminMiddleWare],
+  errorHandler(getOrders)
+);
+
 orderRoutes.get(
   "/users/:id",
   [authMiddleware, adminMiddleWare],

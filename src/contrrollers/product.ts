@@ -79,18 +79,13 @@ export const getProducts = async (req: Request, res: Response) => {
   const tags = req.query.tags as string || ''
 
 
-  const filter = tags
-    ? {
-      tags: {
-        contains: tags, 
-      },
-    }
-    : {};
-
   const skip = (page - 1) * limit;
 
   const products = await prisma.product.findMany({
-    where: filter,
+    where: {
+      tags: {
+        contains: tags, 
+      }},
     skip,
     take: limit,
   });

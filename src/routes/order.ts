@@ -26,7 +26,7 @@ orderRoutes.get(
 
 orderRoutes.get(
   "/users/:id",
-  [authMiddleware, adminMiddleWare],
+  [authMiddleware],
   errorHandler(getUserOrder)
 );
 orderRoutes.put(

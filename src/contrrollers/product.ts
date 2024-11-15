@@ -82,13 +82,14 @@ export const getProducts = async (req: Request, res: Response) => {
   const skip = (page - 1) * limit;
 
   const products = await prisma.product.findMany({
-    where: {
+    where: tags ? {
       tags: {
-        contains: tags, 
-      }},
+        equals: tags,
+      }
+    } : {},
     skip,
     take: limit,
-  });
+  })
 
 
   // Get total number of orders

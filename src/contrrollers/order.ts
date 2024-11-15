@@ -174,39 +174,47 @@ export const getOrderById = async (req: Request, res: Response) => {
 };
 
 export const getUserOrder = async (req: Request, res: Response) => {
-   // Get page and limit from query params, with defaults
-   const page = parseInt(req.query.page as string) || 1;
-   const limit = parseInt(req.query.limit as string) || 10;
- 
-   const skip = (page - 1) * limit;
- 
-   const orders = await prisma.order.findMany({
-     skip,
-     take: limit,
-     where: { userId: req.user?.id },
-     include: {
-       products: true,
-       user: true,
-     },
-   });
- 
-   // Get total number of orders
-   const totalOrders = await prisma.order.count();
- 
-   // Prepare pagination metadata
-   const totalPages = Math.ceil(totalOrders / limit);
- 
-   const response = new HTTPSuccessResponse("Orders fetched successfully", 200, {
-     collection: orders,
-     pagination: {
-       currentPage: page,
-       totalPages,
-       totalOrders,
-       limit,
-     },
-   });
-   res.status(response.statusCode).json(response);
+  // Get page and limit from query params, with defaults
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+  const skip = (page - 1) * limit;
+  const userId = req.user?.id;
 
+
+  try {
+    const orders = await prisma.order.findMany({
+      skip,
+      take: limit,
+      where: userId ? { userId } : {},
+      include: {
+        products: true,
+        user: true,
+      },
+    });
+
+    // Get total number of orders
+    const totalOrders = await prisma.order.count();
+
+    // Prepare pagination metadata
+    const totalPages = Math.ceil(totalOrders / limit);
+
+    const response = new HTTPSuccessResponse(
+      "Orders fetched successfully",
+      200,
+      {
+        collection: orders,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalOrders,
+          limit,
+        },
+      }
+    );
+    res.status(response.statusCode).json(response);
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 export const updateOrderStatus = async (req: Request, res: Response) => {

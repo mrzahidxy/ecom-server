@@ -17,6 +17,14 @@ orderRoutes.post("/", [authMiddleware], errorHandler(createOrder));
 orderRoutes.put("/:id", [authMiddleware], errorHandler(cancelOrder));
 orderRoutes.get("/:id", [authMiddleware], errorHandler(getOrderById));
 
+orderRoutes.get(
+  "/users/me",
+  [authMiddleware],
+  errorHandler(getUserOrder)
+);
+
+
+
 // Admin Routes
 orderRoutes.get(
   "/",
@@ -24,11 +32,6 @@ orderRoutes.get(
   errorHandler(getOrders)
 );
 
-orderRoutes.get(
-  "/users/:id",
-  [authMiddleware],
-  errorHandler(getUserOrder)
-);
 orderRoutes.put(
   "/status/:id",
   [authMiddleware, adminMiddleWare],

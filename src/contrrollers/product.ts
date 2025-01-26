@@ -3,10 +3,9 @@ import prisma from "../connect";
 import { NotFoundException } from "../exceptions/not-found";
 import { ErrorCode } from "../exceptions/root";
 import { HTTPSuccessResponse } from "../helpers/success-response";
+import logger from "../logger/logger";
 
 export const createProduct = async (req: Request, res: Response) => {
-
-  try {
     // Check if an image file was uploaded
     const imageUrl = req.file ? req.file.path : null;
 
@@ -26,12 +25,7 @@ export const createProduct = async (req: Request, res: Response) => {
       product
     );
     res.status(response.statusCode).json(response);
-  } catch (error) {
-    throw new NotFoundException(
-      "INTERNAL EXCEPTION",
-      ErrorCode?.INTERNAL_EXCEPTION
-    );
-  }
+
 };
 
 export const updateProduct = async (req: Request, res: Response) => {
@@ -108,6 +102,7 @@ export const getProducts = async (req: Request, res: Response) => {
     },
   });
   res.status(response.statusCode).json(response);
+  logger.info("GET / - Root route accessed.");
 };
 
 export const getProductById = async (req: Request, res: Response) => {

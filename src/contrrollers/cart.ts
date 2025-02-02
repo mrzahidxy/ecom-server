@@ -18,7 +18,7 @@ export const addToCart = async (req: Request, res: Response) => {
   } catch (error) {
     throw new NotFoundException(
       "Product not found",
-      ErrorCode?.PRODUCT_NOT_FOUND
+      ErrorCode?.ProductNotFound
     );
   }
 
@@ -58,7 +58,7 @@ export const deleteCartItem = async (req: Request, res: Response) => {
       where: { id: Number(req.params.id), userId: req.user?.id },
     });
   } catch (error) {
-    throw new NotFoundException("Cart item not found", ErrorCode.NO_AUTHORIZED);
+    throw new NotFoundException("Cart item not found", ErrorCode.NotAuthorized);
   }
 
   const response = new HTTPSuccessResponse(
@@ -92,7 +92,7 @@ export const changeQuantity = async (req: Request, res: Response) => {
       where: { id: Number(req.params.id), userId: req.user?.id },
     });
   } catch (error) {
-    throw new NotFoundException("Cart not found", ErrorCode?.CART_NOT_FOUND);
+    throw new NotFoundException("Cart not found", ErrorCode?.CartNotFound);
   }
 
   await prisma.cartItem.update({

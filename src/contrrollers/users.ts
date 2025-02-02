@@ -1,7 +1,5 @@
 import { Request, Response } from "express";
 import prisma from "../connect";
-import { NotFoundException } from "../exceptions/not-found";
-import { ErrorCode } from "../exceptions/root";
 import { updateUserRoleSchema } from "../schema/users";
 import { HTTPSuccessResponse } from "../helpers/success-response";
 
@@ -11,23 +9,23 @@ export const getUsers = async (req: Request, res: Response) => {
 
   const skip = (page - 1) * limit;
 
-  const users = await prisma.user.findMany({
-    skip,
-    take: limit,
-  });
-
-  // Get total number of orders
-  const totalOrders = await prisma.order.count();
+  const [users, totalUsers] = await Promise.all([
+    prisma.user.findMany({
+      skip,
+      take: limit,
+    }),
+    prisma.user.count(),
+  ]);
 
   // Prepare pagination metadata
-  const totalPages = Math.ceil(totalOrders / limit);
+  const totalPages = Math.ceil(totalUsers / limit);
 
   const response = new HTTPSuccessResponse("Users fetched successfully", 200, {
     collection: users,
     pagination: {
       currentPage: page,
       totalPages,
-      totalOrders,
+      totalUsers,
       limit,
     },
   });
@@ -35,8 +33,16 @@ export const getUsers = async (req: Request, res: Response) => {
 };
 
 export const getUserById = async (req: Request, res: Response) => {
-  const user = await prisma.user.findFirstOrThrow({
-    where: { id: +req.params.id },
+  const userId = req.user?.id;
+
+  if (!userId) {
+    return res
+      .status(400)
+      .json(new HTTPSuccessResponse("Invalid user id", 400));
+  }
+
+  const user = await prisma.user.findUniqueOrThrow({
+    where: { id: userId },
   });
 
   const response = new HTTPSuccessResponse(
@@ -49,7 +55,6 @@ export const getUserById = async (req: Request, res: Response) => {
 
 export const updateUserRole = async (req: Request, res: Response) => {
   const validateData = updateUserRoleSchema.parse(req.body);
-  try {
     await prisma.user.update({
       where: { id: +req.params.id },
       data: {
@@ -62,7 +67,4 @@ export const updateUserRole = async (req: Request, res: Response) => {
       200
     );
     res.status(response.statusCode).json(response);
-  } catch (error) {
-    throw new NotFoundException("User not found", ErrorCode.USER_NOT_FOUND);
-  }
 };

@@ -119,7 +119,7 @@ export const cancelOrder = async (req: Request, res: Response) => {
     );
     res.status(response.statusCode).json(response);
   } catch (error) {
-    throw new NotFoundException("Order not found", ErrorCode.ORDER_NOT_FOUND);
+    throw new NotFoundException("Order not found", ErrorCode.OrderNotFound);
   }
 };
 
@@ -250,6 +250,6 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
       res.status(response.statusCode).json(response);
     });
   } catch (error) {
-    throw new NotFoundException("Order not found", ErrorCode.ORDER_NOT_FOUND);
+    throw new NotFoundException("Order not found", ErrorCode.OrderNotFound);
   }
 };

@@ -21,21 +21,26 @@ export class HTTPException extends Error {
 }
 
 export enum ErrorCode {
-  USER_NOT_FOUND = 1001,
-  USER_ALREADY_EXISTS = 1002,  // Typo fixed from EXITS to EXISTS
-  INCORRECT_PASSWORD = 1003,
-  ADDRESS_NOT_FOUND = 1004,    // Avoided conflict with USER_NOT_FOUND
-  
-  PRODUCT_NOT_FOUND = 2001,
-  
-  CART_NOT_FOUND = 2002,       // Fixed leading zero in 001
+  // User-related errors (100 series)
+  UserNotFound = 101,
+  UserAlreadyExists = 102,
+  IncorrectPassword = 103,
+  AddressNotFound = 104,
 
-  ORDER_NOT_FOUND = 2003,
-  
-  INTERNAL_EXCEPTION = 3001,
-  
-  NO_TOKEN_PROVIDED = 4001,
-  NO_AUTHORIZED = 4002,        // Fixed typo from AUTRHORIZED to AUTHORIZED
-  
-  UNPROCESSABLE_ENTITY = 5001
+  // Product, Cart, Order and Promotion errors (200 series)
+  ProductNotFound = 201,
+  CartNotFound = 202,
+  OrderNotFound = 203,
+  PromotionNotFound = 204,
+
+  // Internal errors (300 series)
+  InternalServerError = 301,
+
+  // Authorization and authentication errors (400 series)
+  NoTokenProvided = 401,
+  NotAuthorized = 402,
+
+  //validation errors (500 series)
+  UnprocessableEntity = 501
 }
+

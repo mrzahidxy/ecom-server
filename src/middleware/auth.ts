@@ -17,7 +17,7 @@ export const authMiddleware = async (
     next(
       new UnauthorizedException(
         "No token provided",
-        ErrorCode.NO_TOKEN_PROVIDED
+        ErrorCode.NoTokenProvided
       )
     );
   }
@@ -33,7 +33,7 @@ export const authMiddleware = async (
       next(
         new UnauthorizedException(
           "No token provided",
-          ErrorCode.NO_TOKEN_PROVIDED
+          ErrorCode.NoTokenProvided
         )
       );
     } 
@@ -44,7 +44,7 @@ export const authMiddleware = async (
     next(
       new UnauthorizedException(
         "No token provided",
-        ErrorCode.NO_TOKEN_PROVIDED
+        ErrorCode.NoTokenProvided
       )
     );
   }

@@ -25,7 +25,7 @@ export const signup = async (
     next(
       new BadRequestException(
         "User already exists",
-        ErrorCode.USER_ALREADY_EXISTS
+        ErrorCode.UserAlreadyExists
       )
     );
   }
@@ -57,13 +57,13 @@ export const login = async (
 
   if (!user) {
     return next(
-      new NotFoundException("No user found", ErrorCode.USER_NOT_FOUND)
+      new NotFoundException("No user found", ErrorCode.UserNotFound)
     );
   }
 
   if (!compareSync(password, user.password)) {
     return next(
-      new BadRequestException("Wrong password", ErrorCode.INCORRECT_PASSWORD)
+      new BadRequestException("Wrong password", ErrorCode.IncorrectPassword)
     );
   }
 
@@ -79,19 +79,24 @@ export const login = async (
 };
 
 export const me = async (req: Request, res: Response, next: NextFunction) => {
+  const userId = req.user?.id;
+
+  if (!userId) {
+    return res.status(400).json(new HTTPSuccessResponse("Unauthorized", 400));
+  }
+
   const user = await prisma.user.findUnique({
     where: { id: req.user?.id },
     include: { Address: true },
   });
 
-  const { password, ...rest } = user?.password
-    ? user
-    : { password: null, ...user };
+  if (!user)
+    return res.status(400).json(new HTTPSuccessResponse("Unauthorized", 400));
 
   const response = new HTTPSuccessResponse(
     "User fetched successfully",
     200,
-    rest
+    user
   );
   res.status(response.statusCode).json(response);
 };

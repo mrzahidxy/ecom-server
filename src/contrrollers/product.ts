@@ -53,7 +53,7 @@ export const updateProduct = async (req: Request, res: Response) => {
   } catch (error) {
     throw new NotFoundException(
       "Product not found",
-      ErrorCode?.PRODUCT_NOT_FOUND
+      ErrorCode?.ProductNotFound
     );
   }
 };

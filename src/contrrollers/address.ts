@@ -69,7 +69,7 @@ export const updateUser = async (req: Request, res: Response) => {
   } catch (error) {
     throw new BadRequestException(
       "Error updating user",
-      ErrorCode.UNPROCESSABLE_ENTITY
+      ErrorCode.UnprocessableEntity
     );
   }
 };
@@ -95,7 +95,7 @@ export const deleteAddress = async (req: Request, res: Response) => {
   } else {
     throw new UnauthorizedException(
       "Address not found or unauthorized",
-      ErrorCode.ADDRESS_NOT_FOUND
+      ErrorCode.AddressNotFound
     );
   }
 };

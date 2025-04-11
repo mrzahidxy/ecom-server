@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import prisma from "../connect";
 import { NotFoundException } from "../exceptions/not-found";
 import { ErrorCode } from "../exceptions/root";
-import { Order } from "@prisma/client";
+import { Order, PromotionType } from "@prisma/client";
 import { HTTPSuccessResponse } from "../helpers/success-response";
 
 export const createOrder = async (req: Request, res: Response) => {
@@ -13,18 +13,17 @@ export const createOrder = async (req: Request, res: Response) => {
     // Find cart items for the current user
     const cartItems = await tx.cartItem.findMany({
       where: { userId },
-      include: { product: true },
+      include: {
+        product: {
+          include: { PromotionProduct: { include: { promotion: true } } }
+        }
+      },
     });
 
     // Check if the cart is empty
     if (cartItems.length === 0) {
       return res.status(400).json({ message: "Cart is empty" });
     }
-
-    // Calculate the total price of the cart items
-    const price = cartItems.reduce((acc, item) => {
-      return acc + item.quantity * +item.product.price;
-    }, 0);
 
     // Check if the user has a default shipping address
     if (!defaultShippingAddressId) {
@@ -47,11 +46,41 @@ export const createOrder = async (req: Request, res: Response) => {
       });
     }
 
-    // Create the order with the user's cart items and address
+
+
+    // Calculate the total price of the cart items
+    const price = cartItems.reduce((acc, item) => {
+      return acc + item.quantity * +item.product.price;
+    }, 0);
+
+    let totalDiscount = 0;
+
+    cartItems.forEach((item) => {
+      if (item.product.PromotionProduct && item.product.PromotionProduct.length > 0) {
+        const activePromotion = item.product.PromotionProduct.find((p) => p.promotion.isActive && p.promotion.startDate <= new Date() && p.promotion.endDate >= new Date());
+
+        if (activePromotion) {
+          const promo = activePromotion.promotion;
+
+          if (promo.type === PromotionType.PERCENTAGE && promo.discount) {
+            totalDiscount += (item.quantity * +item.product.price) * (Number(promo?.discount) / 100);
+          } if (promo.type === PromotionType.FIXED) {
+            totalDiscount += Number(promo?.discount);
+          } else if (promo.type === PromotionType.WEIGHTED) {
+
+          }
+        }
+      }
+    })
+
+
+
+
+    //Create the order with the user's cart items and address
     const order = await tx.order.create({
       data: {
         userId: userId!,
-        netAmount: price,
+        netAmount: price - totalDiscount,
         address: address.formattedAddress, // Using the found address
         products: {
           create: cartItems.map((item) => ({
@@ -193,7 +222,7 @@ export const getUserOrder = async (req: Request, res: Response) => {
     });
 
     // Get total number of orders
-    const totalOrders = await prisma.order.count();
+    const totalOrders = await prisma.order.count({ where: { userId } });
 
     // Prepare pagination metadata
     const totalPages = Math.ceil(totalOrders / limit);

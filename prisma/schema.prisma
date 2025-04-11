@@ -1,25 +1,135 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
-// datasource db {
-//   provider = "postgresql"
-//   url      = env("DATABASE_URL")
-// }
-
-
-
-// to conncet supabase
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                     Int        @id @default(autoincrement())
+  name                   String
+  email                  String     @unique
+  password               String
+  role                   Role       @default(USER)
+  createdAt              DateTime   @default(now())
+  updateAt               DateTime   @updatedAt
+  defaultShippingAddress Int?
+  defaultBillingAddress  Int?
+  Address                Address[]
+  CartItem               CartItem[]
+  Order                  Order[]
+
+  @@map("users")
+}
+
+model Product {
+  id               Int                @id @default(autoincrement())
+  name             String
+  description      String
+  price            Decimal
+  tags             String
+  createdAt        DateTime           @default(now())
+  updateAt         DateTime           @updatedAt
+  image            String?
+  PromotionProduct PromotionProduct[]
+  CartItem         CartItem[]
+  OrderProduct     OrderProduct[]
+
+  @@map("products")
+}
+
+model Address {
+  id         Int      @id @default(autoincrement())
+  country    String
+  state      String
+  city       String
+  postalCode Int
+  address    String
+  userId     Int
+  createdAt  DateTime @default(now())
+  updateAt   DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@map("addresses")
+}
+
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  productId Int
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("cart_items")
+}
+
+model Order {
+  id         Int              @id @default(autoincrement())
+  userId     Int
+  netAmount  Decimal
+  address    String
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  status     OrderEventStatus @default(PENDING)
+  OrderEvent OrderEvent[]
+  products   OrderProduct[]
+  user       User             @relation(fields: [userId], references: [id])
+
+  @@map("orders")
+}
+
+model OrderProduct {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  productId Int
+  quantity  Int
+  order     Order    @relation(fields: [orderId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+
+  @@map("order_products")
+}
+
+model OrderEvent {
+  id        Int              @id @default(autoincrement())
+  orderId   Int
+  status    OrderEventStatus @default(PENDING)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  order     Order            @relation(fields: [orderId], references: [id])
+}
+
+
+model Promotion {
+  id        Int                @id @default(autoincrement())
+  title     String
+  startDate DateTime
+  endDate   DateTime
+  code      String             @unique
+  type      PromotionType
+  discount  Decimal?
+  slabs     Json?
+  createdAt DateTime           @default(now())
+  updateAt  DateTime           @updatedAt
+  isActive  Boolean            @default(false)
+  products  PromotionProduct[]
+}
+
+model PromotionProduct {
+  id          Int       @id @default(autoincrement())
+  productId   Int
+  promotionId Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime
+  product     Product   @relation(fields: [productId], references: [id])
+  promotion   Promotion @relation(fields: [promotionId], references: [id])
 }
 
 enum Role {
@@ -34,100 +144,14 @@ enum OrderEventStatus {
   CANCELLED
 }
 
-model User {
-  id                     Int        @id @default(autoincrement())
-  name                   String
-  email                  String     @unique
-  password               String
-  role                   Role       @default(USER)
-  createdAt              DateTime   @default(now())
-  updateAt               DateTime   @updatedAt
-  Address                Address[]
-  defaultShippingAddress Int?
-  defaultBillingAddress  Int?
-  CartItem               CartItem[]
-  Order                  Order[]
-
-  @@map("users")
+enum PromotionType {
+  PERCENTAGE
+  FIXED
+  WEIGHTED
 }
 
-model Product {
-  id           Int            @id @default(autoincrement())
-  name         String
-  description  String
-  price        Decimal
-  tags         String
-  image        String?
-  createdAt    DateTime       @default(now())
-  updateAt     DateTime       @updatedAt
-  CartItem     CartItem[]
-  OrderProduct OrderProduct[]
 
-  @@map("products")
-}
-
-model Address {
-  id         Int      @id @default(autoincrement())
-  country    String
-  state      String
-  city       String
-  postalCode Int
-  address    String
-  userId     Int
-  user       User     @relation(fields: [userId], references: [id])
-  createdAt  DateTime @default(now())
-  updateAt   DateTime @updatedAt
-
-  @@map("addresses")
-}
-
-model CartItem {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  productId Int
-  product   Product  @relation(fields: [productId], references: [id])
-  quantity  Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("cart_items")
-}
-
-model Order {
-  id        Int              @id @default(autoincrement())
-  userId    Int
-  user      User             @relation(fields: [userId], references: [id])
-  netAmount Decimal
-  address   String
-  status    OrderEventStatus @default(PENDING)
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
-
-  products   OrderProduct[]
-  OrderEvent OrderEvent[]
-
-  @@map("orders")
-}
-
-model OrderProduct {
-  id        Int      @id @default(autoincrement())
-  orderId   Int
-  order     Order    @relation(fields: [orderId], references: [id])
-  productId Int
-  product   Product  @relation(fields: [productId], references: [id])
-  quantity  Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("order_products")
-}
-
-model OrderEvent {
-  id        Int              @id @default(autoincrement())
-  orderId   Int
-  order     Order            @relation(fields: [orderId], references: [id])
-  status    OrderEventStatus @default(PENDING)
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+model heartbeat_logs {
+  id         Int       @id @default(autoincrement())
+  created_at DateTime? @default(now()) @db.Timestamp(6)
 }

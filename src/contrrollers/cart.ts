@@ -69,15 +69,36 @@ export const deleteCartItem = async (req: Request, res: Response) => {
 };
 
 export const getCart = async (req: Request, res: Response) => {
-  const cart = await prisma.cartItem.findMany({
+  const cartItems = await prisma.cartItem.findMany({
     where: { userId: req.user?.id },
-    include: { product: true },
+    include: {
+      product: {
+        include: { PromotionProduct: { include: { promotion: true } } }
+      }
+    }
+  });
+
+  // Transform the cart items so that each product has a "promotion" property.
+  const transformedCart = cartItems.map(item => {
+    const { product } = item;
+    let promotion = null;
+    if (product.PromotionProduct && product.PromotionProduct.length > 0) {
+      // Here, we assume you want the first promotion.
+      promotion = product.PromotionProduct[0].promotion;
+    }
+    return {
+      ...item,
+      product: {
+        ...product,
+        promotion, 
+      }
+    };
   });
 
   const response = new HTTPSuccessResponse(
     "Cart fetched successfully",
     200,
-    cart
+    transformedCart
   );
   res.status(response.statusCode).json(response);
 };

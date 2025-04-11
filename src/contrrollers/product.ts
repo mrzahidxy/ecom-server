@@ -113,12 +113,19 @@ export const getProducts = async (req: Request, res: Response) => {
 export const getProductById = async (req: Request, res: Response) => {
   const product = await prisma.product.findUnique({
     where: { id: Number(req.params.id) },
+    include:{PromotionProduct: {include: {promotion: true}}},
   });
+  
+  const formattedProducts ={
+    ...product,
+    promotion: product?.PromotionProduct[0]?.promotion
+  }
+
 
   const response = new HTTPSuccessResponse(
     "Product fetched successfully",
     200,
-    product
+    formattedProducts
   );
   res.status(response.statusCode).json(response);
 };

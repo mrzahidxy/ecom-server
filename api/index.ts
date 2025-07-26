@@ -1,3 +1,4 @@
+import { healthCheck } from './../src/contrrollers/healthCheck';
 import express, { Express} from "express";
 import { PORT } from "../src/secret";
 import rootRouter from "../src/routes";
@@ -10,6 +11,7 @@ app.use(cors({ origin: '*' }))
 
 
 app.use("/api", rootRouter);
+app.get("/health", healthCheck);
 
 app.use(errorMiddleware)
 
